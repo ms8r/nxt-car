@@ -172,7 +172,7 @@ class UltrasonicThread(SensorThreadBase, ns.Ultrasonic):
     of motor's power parameter when distance falls below min_distance.
     """
     # distance at which to change direction
-    min_distance = 20
+    min_distance = 30
     # grace period (in sec) after direction change:
     reverse_timout = 2
 
@@ -255,10 +255,17 @@ class ResultQueueChecker(threading.Thread):
 if __name__ == '__main__':
 
     b = find_one_brick(name='NAMANI')
-
     logging.debug("Found brick: %s", b)
 
-    # stopQueue:
+    # main thread's signal queue:
     sq = Queue.Queue()
 
-
+    # motors and sensors for driving the car:
+    ma = MotorRunThread(b, nm.PORT_A, sq, name='motor_A')
+    mb = MotorRunThread(b, nm.PORT_B, sq, name='motor_B')
+    ts1 = MotorTouchThread(b, ns.PORT_1, ma, sq, name='touch_1')
+    ts2 = MotorTouchThread(b, ns.PORT_2, mb, sq, name='touch_2')
+    #  motor to turn ultrasound sensor and sensor itelf:
+    mc = MotorRunThread(b, nm.PORT_C, sq, name='motor_C')
+    us = UltrasonicThread(b, ns.PORT_4, mc, MotorRunThread.power, sq,
+            name='ultra_s')
